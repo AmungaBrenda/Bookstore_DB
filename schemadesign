@@ -1,0 +1,133 @@
+# Bookstore Database Schema Design Process
+
+## Main Entity Tables
+
+### Book Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each book
+- `title`: VARCHAR(400) - Sufficient length for book titles, including subtitles
+- `isbn13`: VARCHAR(13) - Standard ISBN-13 format
+- `isbn10`: VARCHAR(10) - Older ISBN-10 format, still in use
+- `publication_date`: DATE - When the book was published
+- `publisher_id`: INT - Foreign key to publisher table
+- `language_id`: INT - Foreign key to book_language table
+- `price`: DECIMAL(10,2) - Precise monetary values with 2 decimal places
+- `pages`: INT - Number of pages in the book
+- `stock_quantity`: INT - Current inventory count
+
+### Author Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each author
+- `author_name`: VARCHAR(400) - Full name of the author
+  - Used a single field rather than splitting first/last name to accommodate various naming conventions worldwide
+
+### Customer Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each customer
+- `first_name`: VARCHAR(200) - First name of the customer
+- `last_name`: VARCHAR(200) NOT NULL - Last name of the customer (required)
+- `email`: VARCHAR(350) NOT NULL - Email address (required)
+- `phone`: VARCHAR(20) - Phone number with international format support
+- `date_created`: TIMESTAMP DEFAULT CURRENT_TIMESTAMP - Automatic timestamp when record is created
+
+### Publisher Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each publisher
+- `publisher_name`: VARCHAR(400) NOT NULL - Name of the publishing company
+
+### Address Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each address
+- `street_number`: VARCHAR(10) - Street number as string to handle values like "123A"
+- `street_name`: VARCHAR(200) - Street name
+- `city`: VARCHAR(100) - City name
+- `state`: VARCHAR(100) - State/province/region
+- `postal_code`: VARCHAR(20) - Postal code (string to handle international formats)
+- `country_id`: INT NOT NULL - Foreign key to country table
+
+### Country Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each country
+- `country_name`: VARCHAR(200) NOT NULL - Country name
+
+## Order-Related Tables
+
+### Cust_Order Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each order
+- `order_date`: TIMESTAMP DEFAULT CURRENT_TIMESTAMP - When the order was placed
+- `customer_id`: INT NOT NULL - Foreign key to customer table
+- `shipping_address_id`: INT NOT NULL - Foreign key to address table
+- `shipping_method_id`: INT NOT NULL - Foreign key to shipping_method table
+- `order_total`: DECIMAL(10,2) NOT NULL - Total cost of the order
+
+### Order_Line Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each order line
+- `order_id`: INT NOT NULL - Foreign key to cust_order table
+- `book_id`: INT NOT NULL - Foreign key to book table
+- `quantity`: INT NOT NULL - Number of copies ordered
+- `price`: DECIMAL(10,2) NOT NULL - Price at time of order (may differ from current book price)
+
+### Order_History Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each history record
+- `order_id`: INT NOT NULL - Foreign key to cust_order table
+- `status_id`: INT NOT NULL - Foreign key to order_status table
+- `status_date`: TIMESTAMP DEFAULT CURRENT_TIMESTAMP - When status was updated
+- `notes`: TEXT - Additional information about the status change
+
+### Order_Status Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each status
+- `status_name`: VARCHAR(50) NOT NULL - Name of the status (e.g., "Pending", "Shipped")
+
+### Shipping_Method Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each shipping method
+- `method_name`: VARCHAR(100) NOT NULL - Name of the shipping method
+- `cost`: DECIMAL(6,2) NOT NULL - Cost of the shipping method
+
+## Junction/Relationship Tables
+
+### Book_Author Table
+- Manages many-to-many relationship between books and authors
+- `book_id`: INT NOT NULL - Foreign key to book table
+- `author_id`: INT NOT NULL - Foreign key to author table
+- Primary key is the combination of both columns
+
+### Customer_Address Table
+- Manages many-to-many relationship between customers and addresses with temporal aspect
+- `id`: INT AUTO_INCREMENT - Unique identifier for each relationship
+- `customer_id`: INT NOT NULL - Foreign key to customer table
+- `address_id`: INT NOT NULL - Foreign key to address table
+- `status_id`: INT NOT NULL - Foreign key to address_status table
+- `date_from`: DATE NOT NULL - When this address became valid for this customer
+- `date_to`: DATE - When this address became invalid (NULL if still valid)
+
+### Book_Language Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each language
+- `language_code`: VARCHAR(8) NOT NULL - ISO language code
+- `language_name`: VARCHAR(50) NOT NULL - Full language name
+
+### Address_Status Table
+- `id`: INT AUTO_INCREMENT - Unique identifier for each status
+- `status_name`: VARCHAR(30) NOT NULL - Name of the status (e.g., "Current", "Previous")
+
+## Design Considerations
+
+1. **Primary Keys**: All tables use an auto-incrementing integer ID as the primary key, except for the junction table book_author which uses a composite primary key.
+
+2. **Foreign Keys**: Appropriate foreign key constraints are defined to maintain referential integrity.
+
+3. **Unique Constraints**: Applied to fields that must be unique:
+   - Email addresses for customers
+   - ISBN numbers for books
+   - Names for lookup tables like statuses and languages
+
+4. **Default Values**: Used for timestamps and other fields where appropriate.
+
+5. **NOT NULL Constraints**: Applied to required fields to prevent incomplete data.
+
+6. **Data Types**:
+   - VARCHAR for text with varying length
+   - INT for whole numbers
+   - DECIMAL for monetary values
+   - DATE or TIMESTAMP for dates and times
+   - TEXT for longer text fields like notes
+
+7. **Table Relationships**:
+   - One-to-Many: Implemented with foreign keys
+   - Many-to-Many: Implemented with junction tables
+   - Temporal relationships: Tracked with date_from and date_to fields
+
+8. **Normalization**: The database is designed to third normal form (3NF) to reduce redundancy while maintaining practical usability.
