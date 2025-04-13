@@ -1,0 +1,20 @@
+-- create roles
+CREATE ROLE devs, clients, admins;
+
+-- create users
+CREATE USER 'Brenda'@'localhost'
+IDENTIFIED BY '1234';
+CREATE USER 'Kalvin'@'localhost'
+IDENTIFIED BY '1234';
+CREATE USER 'Emmanuel'@'localhost'
+IDENTIFIED BY '1234';
+
+-- Assign permission
+GRANT ALL ON bookstoredb.* TO devs;
+GRANT SELECT ON bookstoredb.* TO clients;
+GRANT INSERT, UPDATE, DELETE, SELECT ON bookstoredb.* TO admins;
+
+-- add users to roles
+GRANT clients to Emmanuel@localhost;
+GRANT devs to Kalvin@localhost;
+GRANT admins to Brenda@localhost;
